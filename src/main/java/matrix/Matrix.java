@@ -1,15 +1,13 @@
 package matrix;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
 /**
  * search longest sequence in matrix
- * 
+ *
  * @author linda.velte
  *
  */
@@ -46,24 +44,23 @@ class MatrixAnalyser {
 
 	/**
 	 * longest sequence
-	 * 
+	 *
 	 * @param matrix
 	 * @return longest sequence
 	 */
 	public String longestSequence(int[][] matrix) {
 
-		Map<String, List<Integer>> computedPaths = new HashMap<>();
-		int[][] computedKeys = new int[matrix.length][matrix[0].length];
-		List<Integer> longestPath = null;
-		long pathSize = 0L;
+		List<Integer>[][] computedKeys = new ArrayList[matrix.length][matrix[0].length];
+		List<Integer> longestPath = new ArrayList<>();
+		int longestSize = 0;
 
 		for(int i = 0; i < matrix.length; i++) {
 			for(int j = 0; j < matrix[0].length; j++) {
-				List<Integer> path = pathForPosition(matrix, i, j, computedKeys, computedPaths);
+				List<Integer> path = pathForPosition(matrix, i, j, computedKeys, longestSize);
 				// update result if found path is bigger than existing
-				if(path != null && path.size() > pathSize) {
+				if(path != null && path.size() > longestPath.size()) {
 					longestPath = path;
-					pathSize = path.size();
+					longestSize = path.size();
 				}
 			}
 		}
@@ -72,50 +69,49 @@ class MatrixAnalyser {
 
 	/**
 	 * computes path for position
-	 * 
+	 *
 	 * @param matrix
 	 * @param i
 	 * @param j
 	 * @param computedKeys
 	 * @return path
 	 */
-	private List<Integer> pathForPosition(int[][] matrix, int i, int j, int[][] computedKeys, Map<String, List<Integer>> computedPaths) {
+	private List<Integer> pathForPosition(int[][] matrix, int i, int j, List<Integer>[][] computedKeys, int pathSize) {
+
+		if(computedKeys[i][j] != null) {
+			return computedKeys[i][j];
+		}
 
 		int numberOfLines = matrix.length;
 		int numberOfColumns = matrix[0].length;
 
-		// check if position is within matrix
-		if((i < 0 || i >= numberOfLines || j < 0 || j >= numberOfColumns)) {
-			return null;
+		List<Integer> path = new ArrayList<>();
+
+		// search path recursively, if bigger path is found free memory
+		if(j + 1 < numberOfColumns && matrix[i][j + 1] - matrix[i][j] == 1) {
+			// search right
+			path = pathForPosition(matrix, i, j + 1, computedKeys, pathSize);
+			computedKeys[i][j + 1] = null;
+		} else if(i + 1 < numberOfLines && matrix[i + 1][j] - matrix[i][j] == 1) {
+			// search down
+			path = pathForPosition(matrix, i + 1, j, computedKeys, pathSize);
+			computedKeys[i + 1][j] = null;
+		} else if(j > 0 && matrix[i][j - 1] - matrix[i][j] == 1) {
+			// search left
+			path = pathForPosition(matrix, i, j - 1, computedKeys, pathSize);
+			computedKeys[i][j - 1] = null;
+		} else if(i > 0 && matrix[i - 1][j] - matrix[i][j] == 1) {
+			// search up
+			path = pathForPosition(matrix, i - 1, j, computedKeys, pathSize);
+			computedKeys[i - 1][j] = null;
 		}
 
-		String key = i + "|" + j;
+		path.add(0, matrix[i][j]);
 
-		if(computedKeys[i][j] == 0) {
-			List<Integer> path = new ArrayList<>();
-
-			if(j + 1 < numberOfColumns && matrix[i][j + 1] - matrix[i][j] == 1) {
-				// search right
-				path = pathForPosition(matrix, i, j + 1, computedKeys, computedPaths);
-			} else if(i + 1 < numberOfLines && matrix[i + 1][j] - matrix[i][j] == 1) {
-				// search down
-				path = pathForPosition(matrix, i + 1, j, computedKeys, computedPaths);
-			} else if(j > 0 && matrix[i][j - 1] - matrix[i][j] == 1) {
-				// search left
-				path = pathForPosition(matrix, i, j - 1, computedKeys, computedPaths);
-			} else if(i > 0 && matrix[i - 1][j] - matrix[i][j] == 1) {
-				// search up
-				path = pathForPosition(matrix, i - 1, j, computedKeys, computedPaths);
-			}
-
-			path.add(0, matrix[i][j]);
-
+		if(path != null && path.size() >= pathSize) {
 			// mark as done and store path for computed position
-			computedKeys[i][j] = 1;
-			computedPaths.put(key, path);
-			return path;
+			computedKeys[i][j] = new ArrayList<>(path);
 		}
-		// position was already computed - return path
-		return computedPaths.get(key);
+		return path;
 	}
 }

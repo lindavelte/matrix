@@ -73,7 +73,7 @@ public class MatrixTest {
 
 	@Test
 	public void testBigSequence() {
-		int matrix[][] = new int[1][2000];
+		int matrix[][] = new int[1][20000];
 
 		int number = 0;
 
@@ -85,6 +85,6 @@ public class MatrixTest {
 		MatrixAnalyser analyser = new MatrixAnalyser();
 		String result = analyser.longestSequence(matrix);
 		assertTrue(result.startsWith("0"));
-		assertTrue(result.endsWith("1999"));
+		assertTrue(result.endsWith("19999"));
 	}
 }

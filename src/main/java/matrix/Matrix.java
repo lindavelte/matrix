@@ -32,11 +32,6 @@ public class Matrix {
 			}
 		}
 		reader.close();
-
-		MatrixAnalyser analyser = new MatrixAnalyser();
-		String longestPath = analyser.longestSequence(matrix);
-		System.out.println(longestPath);
-
 	}
 }
 
@@ -50,17 +45,15 @@ class MatrixAnalyser {
 	 */
 	public String longestSequence(int[][] matrix) {
 
-		List<Integer>[][] computedKeys = new ArrayList[matrix.length][matrix[0].length];
+		// List<Integer>[][] computedKeys = new ArrayList[matrix.length][matrix[0].length];
 		List<Integer> longestPath = new ArrayList<>();
-		int longestSize = 0;
-
+		int[][] visited = new int[matrix.length][matrix[0].length];
 		for(int i = 0; i < matrix.length; i++) {
 			for(int j = 0; j < matrix[0].length; j++) {
-				List<Integer> path = pathForPosition(matrix, i, j, computedKeys, longestSize);
+				List<Integer> path = pathForPosition2(matrix, i, j, visited);
 				// update result if found path is bigger than existing
 				if(path != null && path.size() > longestPath.size()) {
 					longestPath = path;
-					longestSize = path.size();
 				}
 			}
 		}
@@ -69,17 +62,17 @@ class MatrixAnalyser {
 
 	/**
 	 * computes path for position
-	 *
+	 * 
 	 * @param matrix
 	 * @param i
 	 * @param j
-	 * @param computedKeys
+	 * @param visited
 	 * @return path
 	 */
-	private List<Integer> pathForPosition(int[][] matrix, int i, int j, List<Integer>[][] computedKeys, int pathSize) {
+	private List<Integer> pathForPosition2(int[][] matrix, int i, int j, int[][] visited) {
 
-		if(computedKeys[i][j] != null) {
-			return computedKeys[i][j];
+		if(visited[i][j] == 1) {
+			return null;
 		}
 
 		int numberOfLines = matrix.length;
@@ -87,31 +80,53 @@ class MatrixAnalyser {
 
 		List<Integer> path = new ArrayList<>();
 
-		// search path recursively, if bigger path is found free memory
-		if(j + 1 < numberOfColumns && matrix[i][j + 1] - matrix[i][j] == 1) {
-			// search right
-			path = pathForPosition(matrix, i, j + 1, computedKeys, pathSize);
-			computedKeys[i][j + 1] = null;
-		} else if(i + 1 < numberOfLines && matrix[i + 1][j] - matrix[i][j] == 1) {
-			// search down
-			path = pathForPosition(matrix, i + 1, j, computedKeys, pathSize);
-			computedKeys[i + 1][j] = null;
-		} else if(j > 0 && matrix[i][j - 1] - matrix[i][j] == 1) {
-			// search left
-			path = pathForPosition(matrix, i, j - 1, computedKeys, pathSize);
-			computedKeys[i][j - 1] = null;
-		} else if(i > 0 && matrix[i - 1][j] - matrix[i][j] == 1) {
-			// search up
-			path = pathForPosition(matrix, i - 1, j, computedKeys, pathSize);
-			computedKeys[i - 1][j] = null;
-		}
+		boolean hasNext = true;
 
-		path.add(0, matrix[i][j]);
+		int nextj = j;
+		int nexti = i;
+		int lastFoundValue = matrix[i][j];
 
-		if(path != null && path.size() >= pathSize) {
-			// mark as done and store path for computed position
-			computedKeys[i][j] = new ArrayList<>(path);
+		while(hasNext) {
+			if(nextj + 1 < numberOfColumns && matrix[nexti][nextj + 1] - lastFoundValue == 1) {
+				// search right
+				lastFoundValue = addToPathAndMarkAsVisited(path, matrix, visited, nexti, nextj + 1);
+				nextj++;
+			} else if(nexti + 1 < numberOfLines && matrix[nexti + 1][nextj] - lastFoundValue == 1) {
+				// search down
+				lastFoundValue = addToPathAndMarkAsVisited(path, matrix, visited, nexti + 1, nextj);
+				nexti++;
+			} else if(nextj - 1 >= 0 && matrix[nexti][nextj - 1] - lastFoundValue == 1) {
+				// search left
+				lastFoundValue = addToPathAndMarkAsVisited(path, matrix, visited, nexti, nextj - 1);
+				nextj--;
+			} else if(nexti - 1 >= 0 && matrix[nexti - 1][nextj] - lastFoundValue == 1) {
+				// search up
+				lastFoundValue = addToPathAndMarkAsVisited(path, matrix, visited, nexti - 1, nextj);
+				nexti--;
+			} else {
+				hasNext = false;
+			}
 		}
-		return path;
+		if(!path.isEmpty()) {
+			path.add(0, matrix[i][j]);
+			return path;
+		}
+		return null;
+	}
+
+	/**
+	 * adds value to path and marks position as visited
+	 * 
+	 * @param path
+	 * @param matrix
+	 * @param visited
+	 * @param i
+	 * @param j
+	 * @return found value
+	 */
+	private int addToPathAndMarkAsVisited(List<Integer> path, int[][] matrix, int[][] visited, int i, int j) {
+		path.add(matrix[i][j]);
+		visited[i][j] = 1;
+		return matrix[i][j];
 	}
 }

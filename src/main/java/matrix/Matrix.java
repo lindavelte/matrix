@@ -32,6 +32,9 @@ public class Matrix {
 			}
 		}
 		reader.close();
+
+		MatrixAnalyser analyser = new MatrixAnalyser();
+		System.out.println(analyser.longestSequence(matrix));
 	}
 }
 
